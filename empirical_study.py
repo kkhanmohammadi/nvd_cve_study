@@ -31,13 +31,13 @@ def get_summary_statistics(dataset):
     print('Median: %s' % median)
     print('75th percentile: %s' % quartile_3)
     print('Interquartile range (IQR): %s' % iqr)
-def read_all_files():
+def read_all_files(): #reading all cves downloaded everyday from nvd feeds
     df_all_cves=pd.DataFrame()
     basepath = 'C:/nvd/'
     with os.scandir(basepath) as entries:
         for entry in entries:
             if entry.is_file():
-                if entry.name.startswith('df_cve_all_modified_7day'):
+                if entry.name.startswith('df_cve_all_modified_1day'):
                     print(entry.name)
                     df_cves = pd.read_csv("C:/nvd/"+entry.name)
                     df_all_cves = pd.concat([df_all_cves, df_cves])
@@ -56,26 +56,7 @@ def find_vendors():
     list_vendors_with_initial_cpe = df_with_initial_cpe.vendors_x.sum()#7820
     list_vendors_with_update_cpe = df_with_update_cpe.vendors_y.sum()#2319
 
-    '''
-    plt.bar(np.arange(20), list(df_top_no_score['average_no_score']), tick_label=list(df_top_no_score['vendor']))
-    ...
-    plt.xticks(rotation=90)
-    ...
-    plt.xlabel('Vendors')
-    ...
-    plt.ylabel('Percentage of CVEs with no CVSS base score in initial report')
-    ...
-    plt.tight_layout()
-    ...
-    plt.show()
-    '''
-    '''
-    labels, counts = np.unique(list_vendors_with_initial_cpe,return_counts=True)
-    import matplotlib.pyplot as plt
-    ticks = range(len(counts))
-    plt.bar(ticks, counts, align='center')
-    plt.xticks(ticks, labels)
-    '''
+
     from collections import Counter
     import matplotlib.pyplot as plt
     counts_vendors_with_initial_cpe = Counter(list_vendors_with_initial_cpe)
@@ -98,14 +79,14 @@ def find_vendors():
 
     '''
     get_summary_statistics(df_common_vendors_with_initial_cpe[1])
-Min: 38
-Mean: 183.6
-Max: 713
-25th percentile: 61.5
-Median: 105.5
-75th percentile: 318.0
-Interquartile range (IQR): 256.5
-    '''
+    Min: 38
+    Mean: 183.6
+    Max: 713
+    25th percentile: 61.5
+    Median: 105.5
+    75th percentile: 318.0
+    Interquartile range (IQR): 256.5
+        '''
     labels = [item[0] for item in common]
     number = [item[1] for item in common]
     nbars = len(common)
@@ -169,12 +150,12 @@ Interquartile range (IQR): 256.5
     get_summary_statistics(df_merge_common_vendors_with_update_cpe['average'] )
     '''
     Min: 7.14
-Mean: 55.63
-Max: 95.07
-25th percentile: 29.4
-Median: nan
-75th percentile: 81.77
-Interquartile range (IQR): 52.37
+    Mean: 55.63
+    Max: 95.07
+    25th percentile: 29.4
+    Median: nan
+    75th percentile: 81.77
+    Interquartile range (IQR): 52.37
     '''
     df_with_initial_cve=df_cves_1[df_cves_1['vendors'].apply(len).gt(0)]
     list_vendors_with_initial_cve = df_with_initial_cve.vendors.sum()
@@ -468,26 +449,18 @@ def cves_no_severity_box_plot():
     # labels = iris_df['species_name'].unique()
     ax.boxplot(count_date['Last Modified Date'])#,labels=['Number of CVEs'])
     plt.show()
-
-
-
     return
 def cves_no_cpe_box_plot():
-    df_cves = pd.read_csv("C:/nvd/df_cve_all_modified_7day_2021-05-27.csv")
+    df_cves = pd.read_csv("C:/nvd/df_cve_all_modified.csv")
     df_cves.head()
     df_cves_no_cpe = df_cves[df_cves['configurations.nodes']=='[]']#10965
     count_date = df_cves_no_cpe.groupby(by='Date').count()
     #count_date['lastModifiedDate']
     count_date.rename(columns={'lastModifiedDate': 'Last Modified Date'}, inplace=True)
     boxplot = count_date.boxplot(column=['Last Modified Date'])
-    # print("median:"+count_date.median()['Last Modified Date'])#15.5
-    # print("25th percentage:"+count_date.quantile(0.25)['Last Modified Date'])
-    # print("75th percentage:"+count_date.quantile(0.75)['Last Modified Date'])
-    # print("min:"+count_date.min()['Last Modified Date'])
-    # print("max:" + count_date.max()['Last Modified Date'])
     get_summary_statistics(count_date['Last Modified Date'])
-
     return
+
 def cves_no_references_box_plot():
     df_cves = pd.read_csv("C:/nvd/df_cve_all_modified_7day_2021-05-27.csv")
     df_cves.head()
@@ -496,14 +469,9 @@ def cves_no_references_box_plot():
     #count_date['lastModifiedDate']
     count_date.rename(columns={'lastModifiedDate': 'Last Modified Date'}, inplace=True)
     boxplot = count_date.boxplot(column=['Last Modified Date'])
-    # print("median:"+count_date.median()['Last Modified Date'])#15.5
-    # print("25th percentage:"+count_date.quantile(0.25)['Last Modified Date'])
-    # print("75th percentage:"+count_date.quantile(0.75)['Last Modified Date'])
-    # print("min:"+count_date.min()['Last Modified Date'])
-    # print("max:" + count_date.max()['Last Modified Date'])
     get_summary_statistics(count_date['Last Modified Date'])
-
     return
+
 def cves_priority_distribution():
     df_cves = pd.read_csv("C:/nvd/df_cve_all_items_2020.csv")
     df_cves.head()
@@ -774,6 +742,7 @@ class cve_product_comp:
                             cword =self.clean_word(word.text.lower())
                             nouns.append(cword)
                 return nouns
+
 def find_git_links(references_dict):
     y = []
     for x in references_dict:
@@ -784,6 +753,7 @@ def find_git_links(references_dict):
     else:
         return []
 import json
+
 def read_all_cves():
     #step0: convert json file of the cve feeds to dataframe and csv and save
     my_dir='C:/nvd/feeds/'
@@ -869,230 +839,33 @@ def download_cves():
     # df_assets['cve_no']=df_assets['cves'].apply(lambda x: re.findall('\'(CVE-\d+-\d+)\'',x).__len__())
     # df_assets['cve_no'].mean()
     return
-def read_github_scrapy_changes(year):
-    #step3: needs to run scrapy for getting changes
-    #step 4: run current method to join cve name with scrapy results
-    df = pd.read_csv('C:/nvd/feeds/cve'+year+'_git_changes.csv', header=None,encoding='cp1252')
-    df.columns = ['github_url', 'number_of_changes', 'changed_addition_deletion', 'changed_files','change_details','changed_files_github_link']
-    # df.columns = ['no','github_url', 'number_of_changes', 'changed_addition_deletion', 'changed_files','change_details','changed_files_github_link']
-    # df.drop(columns=['no'],axis=1,inplace=True)
-    # df = df.dropna()
-    cve_df = pd.read_csv('C:/nvd/feeds/df_cves'+year+'_github_links_Patch_commit_pull1.csv')
-    #cve_df = cve_df.rename(columns={'github_url': 'github_link'})
-    left_df = pd.merge(cve_df, df, how='left', on=['github_url'])
-    # left_df = left_df.drop(left_df.columns[0], axis=1)
-    left_df = left_df[['cve_id','github_url','github_tags','changed_files','change_details','changed_files_github_link']].copy()
-    left_df.to_csv('C:/nvd/feeds/cve'+year+'_github_changes_for_pull_commit_links.csv')
-
-def download_github_changed_files(year):
-    #step 5: download changed files from github
-    #df_cve=pd.read_csv('C:/nvd/feeds/cve'+year+'_github_changes_for_pull_commit_links.csv',encoding='cp1252')
-    df_cve=pd.read_csv('C:/nvd/feeds/cve'+year+'_github_changes_for_pull_commit_links.csv')
-
-    df_cve=df_cve.dropna()
-    # Parent Directory path
-    parent_dir = 'C:/nvd/feeds/'+year+'/'
-
-    for index,cve in df_cve.iterrows():
-        #create csv folder in C:\Users\kobrakhanmohammadi\Desktop\Raphael\NVD\CSV2020_changed_files
-        # Path
-        path = os.path.join(parent_dir, cve['cve_id'])
-        if not os.path.exists(path):
-            os.mkdir(path)
-
-        #url='https://raw.githubusercontent.com/mjg59/pupnp-code/be0a01bdb83395d9f3a5ea09c1308a4f1a972cbd/configure.ac'
-        file_urls = cve['changed_files_github_link']
-        file_urls = literal_eval(file_urls)
-        time.sleep(20)
-        for url in file_urls:
-            url= url.replace('/blob','')
-            url='https://raw.githubusercontent.com'+url
-            try:
-                resp = requests.get(url)
-                a = url.split('/')
-                file_name = a[len(a) - 1]
-                output_file = open(parent_dir + cve['cve_id']+'/' + file_name, 'w')
-                output_file.write(resp.text)
-                output_file.close()
-                print(year+'downloaded a file')
-
-            except requests.exceptions.RequestException as e:
-                print('error getting url file:'+url)
-            except Exception as e:
-                print(e)
-
-def create_previous_github_file(year):
-    #step 6: create buggy file from the changed files and reported changes in github
-    #df_cve=pd.read_csv('C:/nvd/feeds/cve'+year+'_github_changes_for_pull_commit_links.csv',encoding='cp1252')
-    df_cve=pd.read_csv('C:/nvd/feeds/cve'+year+'_github_changes_for_pull_commit_links.csv')
-
-    df_cve=df_cve.dropna()
-
-    parent_path = 'C:/nvd/feeds/'+year+'/'
-    for index, cve in df_cve.iterrows():
-        cve_dir = cve['cve_id']
-        changed_files_details = literal_eval(cve['change_details'])
-        #changed_files_details = df_cve['change_details']
-        for changed_file in changed_files_details:
-            #read changed file lines
-            #changed_file = literal_eval(changed_file)
-            t = changed_file[0].split('/')
-            file_name = t[len(t) - 1]
-            path_cve = parent_path + cve_dir+'/'
-            try:
-                with open(path_cve+file_name) as file:
-                    file_lines = file.readlines()
-
-                # read file changes
-                changes_list = changed_file[1]
-
-                #create the original file
-                ## first: delete the added lines
-                ch_count = 0
-                for ch in changes_list:
-                    ch_line_no = int(ch[0])-1 # -1 since array starts 0
-                    ch_mark = ch[1]
-                    ch_line_str = ch[2]
-                    if ch_mark == '+':
-                        file_lines = file_lines[:ch_line_no - ch_count] + file_lines[ch_line_no - ch_count + 1:]  # for remove
-                        ch_count = ch_count + 1
-                ## second: add the removed lines
-                ch_count = 0
-                for ch in changes_list:
-                    ch_line_no = int(ch[0])-1 # -1 since array starts from 0
-                    ch_mark = ch[1]
-                    ch_line_str = ch[2]
-                    if ch_mark == '-':
-                        file_lines.insert(ch_line_no+ch_count, ch_line_str+'\n')
-                        #ch_count = ch_count + 1
-                # write original file in the disk
-                with open(path_cve+'buggy_'+file_name, 'w') as f:
-                    for item in file_lines:
-                        f.write("%s" % item)
-            except Exception as e:
-                print(e)
-                print(path_cve+file_name)
-
-    print('finished year: '+year)
-def remove_desktop_github_link():
-    df_2013 = pd.read_csv('C:/nvd/feeds/cve2013_github_changes_for_pull_commit_links.csv', encoding='cp1252')
-    df_2013['changed_files_github_links'] = df_2013['changed_files_github_link'].apply(
-        lambda x: x.replace("'https://desktop.github.com' ", '') if str(x) != 'nan' else x)
-    df_2013['changed_files_github_links'] = df_2013['changed_files_github_links'].apply(
-        lambda x: x.replace(", 'https://desktop.github.com'", '') if str(x) != 'nan' else x)
-
-    df = df_2013.drop(df_2013.columns[[0, 6]], axis=1)
-    df.to_csv('c://nvd/feeds/2013_github_changes_for_pull_commit_links.csv')
-
-def write_to_text():
-    df_2013 = pd.read_csv('C:/nvd/feeds/2013_github_changes_for_pull_commit_links.csv', encoding='cp1252')
-    with open('c:/nvd/feeds/2013_cves_github_changes.txt', 'w') as f:
-        for index,item in df_2013.iterrows():
-            if str(item['change_details'])!='nan':
-                f.write("%s\n" % item['cve_id'])
-                changed_files_details = literal_eval(item['change_details'])
-                for changed_file in changed_files_details:
-                    f.write("%s\n" % changed_file[0])
-                    f.write("%s\n" % changed_file[1])
-        f.close()
-
-def rename_original_buggy(year):
-    #PATH='C:/nvd/feeds/'+year+'/'
-    PATH='C:/Users/kobrakhanmohammadi/PycharmProjects/CVEfixes1/Data/cves_changed_files/'+year+'/'
-    for root, dirs, files in os.walk(PATH):
-        for file in files:
-            if file.startswith("buggy"):
-                org_fp = os.path.join(root, file)
-                path_buggy = os.path.join(root, 'buggy')
-                if not os.path.exists(path_buggy):
-                    os.mkdir(path_buggy)
-                new_fp = os.path.join(path_buggy, file)
-                #os.rename(org_fp, new_fp)
-                shutil.move(org_fp,new_fp)
-            else:
-                print('h')
-                org_fp = os.path.join(root, file)
-                path_patched = os.path.join(root, 'patched')
-                if not os.path.exists(path_patched):
-                    os.mkdir(path_patched)
-                new_fp = os.path.join(path_patched, file)
-                #os.rename(org_fp, new_fp)
-                shutil.move(org_fp,new_fp)
-
-
-
 
 def main():
-    if os.name == 'nt' and bool(re.match('\w{5}\d{2}-(per|dev)-\d{1,2}', platform.node().lower())):
-        # it is running in local machine
-        gbls.nvdcpe = 'C:/nvd/official-cpe-dictionary_v2.3.xml'  # directory for cpe dictionary
-        gbls.nvdcve = 'C:/nvd/nvdcve-1.1-'  # directory for cve dictionary
-        gbls.nvddir = 'C:/nvd/'
-    else:
-        # it is wunning in job server
-        gbls.nvdcpe = '/mnt/storage/nvd/official-cpe-dictionary_v2.3.xml'  # directory for cpe dictionary
-        gbls.nvdcve = '/mnt/storage/nvd/nvdcve-1.1-'  # directory for cve dictionary
-        gbls.nvddir = '/mnt/storage/nvd/'
 
     cp=cve_product_comp()
     cp.cves_summary_product()
 
-    # Download CVEs for last seven days ###########################
-    #download_cves()
-    #read_all_cves() #step 0 one time execution is enough
-    # read_github_scrapy_changes()
-    #read_github_scrapy_changes('2019')
+
     years = ['1999','2002','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021'] #
-    # for year in years:
-    #     cves_references_github(year)#step1
-    #     change_text(year)#step2
-    #
-    # for year in years:
-    #     read_github_scrapy_changes(year) #step 4 run after scrpy
 
-    for year in years:
-        #download_github_changed_files(year) #step 5 download patched files in github
-        #create_previous_github_file(year) #step 6
-        #rename_original_buggy(year)
-        print('finished')
+    with open('c:/nvd/feeds/nvdcve-1.1-2020.json', encoding="utf8") as fd:
+        cve_dict = json.loads(fd.read())
+    
+    df_cve_items = pd.json_normalize(cve_dict['CVE_Items'])
+    
+    """Save NvdCpe vuln dataframe in serialized pickle format."""
+    print('\n\nSaving NvdCve.df_cve dataframe\n\n')
+    df_cve_items.to_pickle('c:/nvd/feeds/df_cve_all_items_2020.pck')
+    df_cve_items.to_csv('c:/nvd/feeds/df_cve_all_items_2020.csv')
 
-    my_dir='C:/Users/kobrakhanmohammadi/PycharmProjects/CVEfixes1/Data/cvefixes_changed_files/'
-    f = []
-    count=0
-    # for year in years:
-    for (dir_path, dir_names, file_names) in os.walk(my_dir):
-        for s in dir_names:
-            if 'CVE-' in s:
-                count=count+1
-
-
-
-    # with open('c:/nvd/feeds/nvdcve-1.1-2020.json', encoding="utf8") as fd:
-    #     cve_dict = json.loads(fd.read())
-    #
-    # df_cve_items = pd.json_normalize(cve_dict['CVE_Items'])
-    #
-    # """Save NvdCpe vuln dataframe in serialized pickle format."""
-    # print('\n\nSaving NvdCve.df_cve dataframe\n\n')
-    # df_cve_items.to_pickle('c:/nvd/feeds/df_cve_all_items_2020.pck')
-    # df_cve_items.to_csv('c:/nvd/feeds/df_cve_all_items_2020.csv')
-
-    #df=pd.read_csv('c:/nvd/feeds/df_cve_all_items_2020.csv')
-    #cves_references_github('2020')
-    #change_text('2020')
-    #rename_original_buggy()
-    #find_vendors()
-    #find_duration_till_geting_cvss()
-    #read_all_files()
-    #cves_no_severity_box_plot()
-    #cves_priority_distribution()
-    #cves_no_cpe_box_plot()
-    #cves_no_references_box_plot()
-    #cves_references_github()
-    #change_text()
-    #read_github_scrapy_changes()
-    #download_github_changed_files()
-    #create_previous_github_file()
+    find_vendors()
+    find_duration_till_geting_cvss()
+    read_all_files()
+    
+    cves_no_severity_box_plot()
+    cves_priority_distribution()
+    cves_no_cpe_box_plot()
+    cves_no_references_box_plot()
     return
 
 
